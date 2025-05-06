@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { TreeNode } from '../types/nodes'
+import { DataNode, TreeNode } from '../types/nodes'
 
 interface Props {
   node: TreeNode
@@ -27,6 +27,13 @@ export default function TreeView({
   const renderNode = (n: TreeNode, depth: number) => {
     const hasChildren = 'children' in n && n.children.length > 0
     const isCollapsed = collapsed.has(n.id)
+    
+    // Helper: pretty‑print a primitive value and truncate long strings
+    const formatValue = (v: unknown) => {
+      const str = JSON.stringify(v)
+      return str.length > 30 ? str.slice(0, 27) + '…' : str
+    }
+
     return (
       <div key={n.id} style={{ paddingLeft: depth * 16 }}>
         <div
@@ -46,7 +53,18 @@ export default function TreeView({
               {isCollapsed ? '+' : '-'}
             </button>
           )}
-          <span>{n.name || '(root)'}</span>
+<span>
+            {n.name || '(root)'}
+            {/* Show primitive value inline for DataNodes */}
+            {n.type === 'data' && (
+              <>
+               :{' '}
+                <span className="text-green-700">
+                  {formatValue((n as DataNode).value)}
+                </span>
+              </>
+            )}
+          </span>          
           <span className="text-xs ml-1 text-gray-500">[{n.type}]</span>
         </div>
         {hasChildren && !isCollapsed && n.children.map((c) => renderNode(c, depth + 1))}
