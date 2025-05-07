@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { setUndoRedoDepthLimit } from '../config/te-config';
 
-interface SettingsPageProps {
+interface SettingsPanelProps {
   undoRedoDepthLimit: number;
   setUndoRedoDepthLimit: (newLimit: number) => void;
 }
 
-const SettingsPage: React.FC<SettingsPageProps> = ({
+const SettingsPanel: React.FC<SettingsPanelProps> = ({
   undoRedoDepthLimit,
   setUndoRedoDepthLimit,
 }) => {
@@ -37,4 +37,4 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
   );
 };
 
-export default SettingsPage;
+export default SettingsPanel;

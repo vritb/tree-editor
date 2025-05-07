@@ -10,7 +10,7 @@ import { calculateStats } from './utils/stats'
 import { validateJson } from './utils/validate'
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import SettingsPage from './components/SettingsPage';
+import SettingsPanel from './components/SettingsPanel';
 import { getUndoRedoDepthLimit } from './config/te-config';
 
 const initial: RootNode = parseJsonToTree({})
@@ -187,7 +187,7 @@ export default function App() {
         </div>
         <div className="w-1/3 p-2 overflow-auto border-l">
           <StatsPanel stats={stats} />
-          <SettingsPage
+          <SettingsPanel
             undoRedoDepthLimit={undoRedoDepthLimit}
             setUndoRedoDepthLimit={setUndoRedoDepthLimit}
           />
