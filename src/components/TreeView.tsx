@@ -1,11 +1,13 @@
 import React, { useState } from 'react'
 import { DataNode, TreeNode } from '../types/nodes'
+import DraggableTreeNode from './DraggableTreeNode';
 
 interface Props {
   node: TreeNode
   selected?: string
   onSelect: (n: TreeNode) => void
   onUpdate: (n: TreeNode) => void
+  onMoveNode: (draggedNode: TreeNode, targetNode: TreeNode) => void;
 }
 
 export default function TreeView({
@@ -13,6 +15,7 @@ export default function TreeView({
   selected,
   onSelect,
   onUpdate,
+  onMoveNode,
 }: Props) {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
 
@@ -35,40 +38,48 @@ export default function TreeView({
     }
 
     return (
-      <div key={n.id} style={{ paddingLeft: depth * 16 }}>
-        <div
-          className={`cursor-pointer p-1 rounded ${
-            selected === n.id ? 'bg-blue-200' : ''
-          }`}
-          onClick={() => onSelect(n)}
-        >
-          {hasChildren && (
-            <button
-              className="mr-1"
-              onClick={(e) => {
-                e.stopPropagation()
-                toggleCollapse(n.id)
-              }}
-            >
-              {isCollapsed ? '+' : '-'}
-            </button>
-          )}
-<span>
-            {n.name || '(root)'}
-            {/* Show primitive value inline for DataNodes */}
-            {n.type === 'data' && (
-              <>
-               :{' '}
-                <span className="text-green-700">
-                  {formatValue((n as DataNode).value)}
-                </span>
-              </>
+      <DraggableTreeNode
+        key={n.id}
+        node={n}
+        onMoveNode={onMoveNode}
+        onSelect={onSelect}
+        selected={selected}
+      >
+        <div style={{ paddingLeft: depth * 16 }}>
+          <div
+            className={`cursor-pointer p-1 rounded ${
+              selected === n.id ? 'bg-blue-200' : ''
+            }`}
+            onClick={() => onSelect(n)}
+          >
+            {hasChildren && (
+              <button
+                className="mr-1"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  toggleCollapse(n.id)
+                }}
+              >
+                {isCollapsed ? '+' : '-'}
+              </button>
             )}
-          </span>          
-          <span className="text-xs ml-1 text-gray-500">[{n.type}]</span>
+            <span>
+              {n.name || '(root)'}
+              {/* Show primitive value inline for DataNodes */}
+              {n.type === 'data' && (
+                <>
+                  :{' '}
+                  <span className="text-green-700">
+                    {formatValue((n as DataNode).value)}
+                  </span>
+                </>
+              )}
+            </span>          
+            <span className="text-xs ml-1 text-gray-500">[{n.type}]</span>
+          </div>
+          {hasChildren && !isCollapsed && n.children.map((c) => renderNode(c, depth + 1))}
         </div>
-        {hasChildren && !isCollapsed && n.children.map((c) => renderNode(c, depth + 1))}
-      </div>
+      </DraggableTreeNode>
     )
   }
 
