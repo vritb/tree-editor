@@ -25,18 +25,21 @@ const DraggableTreeNode: React.FC<DraggableTreeNodeProps> = ({
     }),
   });
 
-  const [, drop] = useDrop({
+  const [{ isOver }, drop] = useDrop({
     accept: 'TREE_NODE',
     drop: (item: { node: TreeNode }) => {
       onMoveNode(item.node, node);
     },
+    collect: (monitor) => ({
+      isOver: monitor.isOver(),
+    }),
   });
 
   return (
     <div
       ref={(instance) => drag(drop(instance))}
       style={{ opacity: isDragging ? 0.5 : 1 }}
-      className={`cursor-pointer p-1 rounded ${selected === node.id ? 'bg-blue-200' : ''}`}
+      className={`cursor-pointer p-1 rounded ${selected === node.id ? 'bg-blue-200' : ''} ${isOver ? 'border border-blue-500' : ''}`}
       onClick={() => onSelect(node)}
     >
       {children}
