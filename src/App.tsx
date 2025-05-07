@@ -10,12 +10,17 @@ import { calculateStats } from './utils/stats'
 import { validateJson } from './utils/validate'
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import SettingsPage from './components/SettingsPage';
+import { getUndoRedoDepthLimit } from './config/te-config';
 
 const initial: RootNode = parseJsonToTree({})
 
 export default function App() {
   const [tree, setTree] = useState<RootNode>(initial)
   const [selected, setSelected] = useState<TreeNode | null>(null)
+  const [history, setHistory] = useState<RootNode[]>([]);
+  const [redoStack, setRedoStack] = useState<RootNode[]>([]);
+  const [undoRedoDepthLimit, setUndoRedoDepthLimit] = useState<number>(getUndoRedoDepthLimit());
 
   const handleUpdateNode = (updated: TreeNode) => {
     // replace the node in tree
@@ -25,7 +30,11 @@ export default function App() {
         : 'children' in node
         ? { ...node, children: node.children.map(replace) as any }
         : node
-    setTree((t) => replace(t) as RootNode)
+    setTree((t) => {
+      const newTree = replace(t) as RootNode;
+      addToHistory(newTree);
+      return newTree;
+    });
   }
   const hiddenFileInput = useRef<HTMLInputElement>(null);
 
@@ -42,6 +51,7 @@ export default function App() {
         const parsed = parseJsonToTree(obj);
         setTree(parsed);
         setSelected(null);
+        addToHistory(parsed);
       } catch (err: any) {
         alert('Import failed: ' + err.message);
       }
@@ -90,7 +100,44 @@ export default function App() {
       return node;
     };
 
-    setTree((t) => addNode(moveNode(t) as RootNode, targetNode.id) as RootNode);
+    setTree((t) => {
+      const newTree = addNode(moveNode(t) as RootNode, targetNode.id) as RootNode;
+      addToHistory(newTree);
+      return newTree;
+    });
+  };
+
+  const addToHistory = (newTree: RootNode) => {
+    setHistory((prevHistory) => {
+      const updatedHistory = [...prevHistory, newTree];
+      if (updatedHistory.length > undoRedoDepthLimit) {
+        updatedHistory.shift();
+      }
+      return updatedHistory;
+    });
+    setRedoStack([]);
+  };
+
+  const handleUndo = () => {
+    setHistory((prevHistory) => {
+      if (prevHistory.length === 0) return prevHistory;
+      const newHistory = [...prevHistory];
+      const lastState = newHistory.pop()!;
+      setRedoStack((prevRedoStack) => [tree, ...prevRedoStack]);
+      setTree(lastState);
+      return newHistory;
+    });
+  };
+
+  const handleRedo = () => {
+    setRedoStack((prevRedoStack) => {
+      if (prevRedoStack.length === 0) return prevRedoStack;
+      const newRedoStack = [...prevRedoStack];
+      const nextState = newRedoStack.shift()!;
+      setHistory((prevHistory) => [...prevHistory, tree]);
+      setTree(nextState);
+      return newRedoStack;
+    });
   };
 
   const stats = calculateStats(tree)
@@ -107,6 +154,12 @@ export default function App() {
               </button>
               <button className="btn btn-sm" onClick={handleExport}>
                 Export JSON
+              </button>
+              <button className="btn btn-sm" onClick={handleUndo} disabled={history.length === 0}>
+                Undo
+              </button>
+              <button className="btn btn-sm" onClick={handleRedo} disabled={redoStack.length === 0}>
+                Redo
               </button>
             </div>
             <input
@@ -134,6 +187,10 @@ export default function App() {
         </div>
         <div className="w-1/3 p-2 overflow-auto border-l">
           <StatsPanel stats={stats} />
+          <SettingsPage
+            undoRedoDepthLimit={undoRedoDepthLimit}
+            setUndoRedoDepthLimit={setUndoRedoDepthLimit}
+          />
         </div>
       </div>
     </DndProvider>
