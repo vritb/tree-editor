@@ -8,6 +8,8 @@ import NodeEditor from './components/NodeEditor'
 import StatsPanel from './components/StatsPanel'
 import { calculateStats } from './utils/stats'
 import { validateJson } from './utils/validate'
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 
 const initial: RootNode = parseJsonToTree({})
 
@@ -66,46 +68,74 @@ export default function App() {
     a.click()
   }
 
+  const handleMoveNode = (draggedNode: TreeNode, targetNode: TreeNode) => {
+    const moveNode = (node: TreeNode): TreeNode | null => {
+      if (node.id === draggedNode.id) return null;
+      if ('children' in node) {
+        const newChildren = node.children
+          .map(moveNode)
+          .filter((n): n is TreeNode => n !== null);
+        return { ...node, children: newChildren };
+      }
+      return node;
+    };
+
+    const addNode = (node: TreeNode, targetId: string): TreeNode => {
+      if (node.id === targetId && 'children' in node) {
+        return { ...node, children: [...node.children, draggedNode] };
+      }
+      if ('children' in node) {
+        return { ...node, children: node.children.map((c) => addNode(c, targetId)) };
+      }
+      return node;
+    };
+
+    setTree((t) => addNode(moveNode(t) as RootNode, targetNode.id) as RootNode);
+  };
+
   const stats = calculateStats(tree)
 
   return (
-    <div className="flex h-full">
-      <div className="w-1/3 overflow-auto border-r">
-        <div className="flex justify-between items-center p-2">
-  <h1 className="font-bold">Tree</h1>
-  <div className="space-x-2">
-    <button className="btn btn-sm" onClick={handleImportClick}>
-      Import JSON
-    </button>
-    <button className="btn btn-sm" onClick={handleExport}>
-      Export JSON
-    </button>
-  </div>
-  <input
-    type="file"
-    accept=".json,application/json"
-    ref={hiddenFileInput}
-    onChange={handleImport}
-    className="hidden"
-  />
-</div>
-        <TreeView
-          node={tree}
-          selected={selected?.id}
-          onSelect={(n) => setSelected(n)}
-          onUpdate={handleUpdateNode}
-        />
+    <DndProvider backend={HTML5Backend}>
+      <div className="flex h-full">
+        <div className="w-1/3 overflow-auto border-r">
+          <div className="flex justify-between items-center p-2">
+            <h1 className="font-bold">Tree</h1>
+            <div className="space-x-2">
+              <button className="btn btn-sm" onClick={handleImportClick}>
+                Import JSON
+              </button>
+              <button className="btn btn-sm" onClick={handleExport}>
+                Export JSON
+              </button>
+            </div>
+            <input
+              type="file"
+              accept=".json,application/json"
+              ref={hiddenFileInput}
+              onChange={handleImport}
+              className="hidden"
+            />
+          </div>
+          <TreeView
+            node={tree}
+            selected={selected?.id}
+            onSelect={(n) => setSelected(n)}
+            onUpdate={handleUpdateNode}
+            onMoveNode={handleMoveNode}
+          />
+        </div>
+        <div className="w-1/3 p-2 overflow-auto">
+          {selected ? (
+            <NodeEditor node={selected} onUpdate={handleUpdateNode} />
+          ) : (
+            <p className="text-gray-500">Select a node to edit</p>
+          )}
+        </div>
+        <div className="w-1/3 p-2 overflow-auto border-l">
+          <StatsPanel stats={stats} />
+        </div>
       </div>
-      <div className="w-1/3 p-2 overflow-auto">
-        {selected ? (
-          <NodeEditor node={selected} onUpdate={handleUpdateNode} />
-        ) : (
-          <p className="text-gray-500">Select a node to edit</p>
-        )}
-      </div>
-      <div className="w-1/3 p-2 overflow-auto border-l">
-        <StatsPanel stats={stats} />
-      </div>
-    </div>
+    </DndProvider>
   )
 }
