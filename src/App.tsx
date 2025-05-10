@@ -12,6 +12,7 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import SettingsPanel from './components/SettingsPanel';
 import { getUndoRedoDepthLimit } from './config/te-config';
+import UndoRedoPanel from './components/UndoRedoPanel';
 
 const initial: RootNode = parseJsonToTree({})
 
@@ -191,6 +192,7 @@ export default function App() {
             undoRedoDepthLimit={undoRedoDepthLimit}
             setUndoRedoDepthLimit={setUndoRedoDepthLimit}
           />
+          <UndoRedoPanel history={history} redoStack={redoStack} />
         </div>
       </div>
     </DndProvider>
