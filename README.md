@@ -10,6 +10,7 @@ A minimal web application to create, edit and visualize JSON structures as a col
 * Add/remove child nodes dynamically
 * Export the current tree to valid JSON
 * Live statistics (depth, counts per node type)
+* Display the contents of the undo and redo stacks
 
 ## Tech stack
 
