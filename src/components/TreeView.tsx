@@ -44,6 +44,7 @@ export default function TreeView({
         onMoveNode={onMoveNode}
         onSelect={onSelect}
         selected={selected}
+        onDrop={onMoveNode}
       >
         <div style={{ paddingLeft: depth * 16 }}>
           <div
