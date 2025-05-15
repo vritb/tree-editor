@@ -13,6 +13,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import SettingsPanel from './components/SettingsPanel';
 import { getUndoRedoDepthLimit } from './config/te-config';
 import UndoRedoPanel from './components/UndoRedoPanel';
+import Popup from './components/Popup';
 
 const initial: RootNode = parseJsonToTree({})
 
@@ -22,6 +23,8 @@ export default function App() {
   const [history, setHistory] = useState<RootNode[]>([]);
   const [redoStack, setRedoStack] = useState<RootNode[]>([]);
   const [undoRedoDepthLimit, setUndoRedoDepthLimit] = useState<number>(getUndoRedoDepthLimit());
+  const [showPopup, setShowPopup] = useState<boolean>(false);
+  const [popupTargetNode, setPopupTargetNode] = useState<TreeNode | null>(null);
 
   const handleUpdateNode = (updated: TreeNode) => {
     // replace the node in tree
@@ -80,8 +83,15 @@ export default function App() {
   }
 
   const handleMoveNode = (draggedNode: TreeNode, targetNode: TreeNode) => {
+    setShowPopup(true);
+    setPopupTargetNode(targetNode);
+  };
+
+  const handlePopupChoice = (choice: 'child' | 'sibling') => {
+    if (!popupTargetNode) return;
+
     const moveNode = (node: TreeNode): TreeNode | null => {
-      if (node.id === draggedNode.id) return null;
+      if (node.id === popupTargetNode.id) return null;
       if ('children' in node) {
         const newChildren = node.children
           .map(moveNode)
@@ -93,7 +103,7 @@ export default function App() {
 
     const addNode = (node: TreeNode, targetId: string): TreeNode => {
       if (node.id === targetId && 'children' in node) {
-        return { ...node, children: [...node.children, draggedNode] };
+        return { ...node, children: [...node.children, popupTargetNode] };
       }
       if ('children' in node) {
         return { ...node, children: node.children.map((c) => addNode(c, targetId)) };
@@ -102,10 +112,13 @@ export default function App() {
     };
 
     setTree((t) => {
-      const newTree = addNode(moveNode(t) as RootNode, targetNode.id) as RootNode;
+      const newTree = addNode(moveNode(t) as RootNode, popupTargetNode.id) as RootNode;
       addToHistory(newTree);
       return newTree;
     });
+
+    setShowPopup(false);
+    setPopupTargetNode(null);
   };
 
   const addToHistory = (newTree: RootNode) => {
@@ -195,6 +208,13 @@ export default function App() {
           <UndoRedoPanel history={history} redoStack={redoStack} />
         </div>
       </div>
+      {showPopup && (
+        <Popup
+          message="Do you want to accept as child or sibling?"
+          onAcceptChild={() => handlePopupChoice('child')}
+          onAcceptSibling={() => handlePopupChoice('sibling')}
+        />
+      )}
     </DndProvider>
   )
 }

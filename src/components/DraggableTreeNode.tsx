@@ -8,6 +8,7 @@ interface DraggableTreeNodeProps {
   onSelect: (node: TreeNode) => void;
   selected?: string;
   children?: React.ReactNode;
+  onDrop?: (draggedNode: TreeNode, targetNode: TreeNode) => void;
 }
 
 const DraggableTreeNode: React.FC<DraggableTreeNodeProps> = ({
@@ -16,6 +17,7 @@ const DraggableTreeNode: React.FC<DraggableTreeNodeProps> = ({
   onSelect,
   selected,
   children,
+  onDrop,
 }) => {
   const [{ isDragging }, drag] = useDrag({
     type: 'TREE_NODE',
@@ -28,7 +30,11 @@ const DraggableTreeNode: React.FC<DraggableTreeNodeProps> = ({
   const [{ isOver, isOverCurrent }, drop] = useDrop({
     accept: 'TREE_NODE',
     drop: (item: { node: TreeNode }) => {
-      onMoveNode(item.node, node);
+      if (onDrop) {
+        onDrop(item.node, node);
+      } else {
+        onMoveNode(item.node, node);
+      }
     },
     collect: (monitor) => ({
       isOver: monitor.isOver(),
