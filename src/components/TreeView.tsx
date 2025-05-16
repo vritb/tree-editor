@@ -7,6 +7,7 @@ interface Props {
   onSelect: (n: TreeNode) => void
   onUpdate: (n: TreeNode) => void
   highlightedNode?: string | null;
+  onMoveNode: (draggedNode: TreeNode, targetNode: TreeNode, action: string) => void;
 }
 
 export default function TreeView({
@@ -15,8 +16,13 @@ export default function TreeView({
   onSelect,
   onUpdate,
   highlightedNode,
+  onMoveNode,
 }: Props) {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
+  const [draggedNode, setDraggedNode] = useState<TreeNode | null>(null)
+  const [hoveredNode, setHoveredNode] = useState<TreeNode | null>(null)
+  const [popupVisible, setPopupVisible] = useState(false)
+  const [popupPosition, setPopupPosition] = useState<{ x: number, y: number } | null>(null)
 
   const toggleCollapse = (id: string) => {
     setCollapsed((c) => {
@@ -24,6 +30,34 @@ export default function TreeView({
       n.has(id) ? n.delete(id) : n.add(id)
       return n
     })
+  }
+
+  const handleDragStart = (e: React.DragEvent, node: TreeNode) => {
+    setDraggedNode(node)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  const handleDragOver = (e: React.DragEvent, node: TreeNode) => {
+    e.preventDefault()
+    setHoveredNode(node)
+    e.dataTransfer.dropEffect = 'move'
+  }
+
+  const handleDrop = (e: React.DragEvent, node: TreeNode) => {
+    e.preventDefault()
+    if (draggedNode && hoveredNode) {
+      setPopupVisible(true)
+      setPopupPosition({ x: e.clientX, y: e.clientY })
+    }
+  }
+
+  const handlePopupAction = (action: string) => {
+    if (draggedNode && hoveredNode) {
+      onMoveNode(draggedNode, hoveredNode, action)
+      setPopupVisible(false)
+      setDraggedNode(null)
+      setHoveredNode(null)
+    }
   }
 
   const renderNode = (n: TreeNode, depth: number) => {
@@ -38,7 +72,13 @@ export default function TreeView({
 
     return (
       <div key={n.id}>
-        <div style={{ paddingLeft: depth * 16 }}>
+        <div
+          style={{ paddingLeft: depth * 16 }}
+          draggable
+          onDragStart={(e) => handleDragStart(e, n)}
+          onDragOver={(e) => handleDragOver(e, n)}
+          onDrop={(e) => handleDrop(e, n)}
+        >
           <div
             className={`cursor-pointer p-1 rounded ${
               selected === n.id ? 'bg-blue-200' : ''
@@ -76,5 +116,19 @@ export default function TreeView({
     )
   }
 
-  return <div>{renderNode(node, 0)}</div>
+  return (
+    <div>
+      {renderNode(node, 0)}
+      {popupVisible && popupPosition && (
+        <div
+          className="absolute bg-white border p-2 rounded shadow"
+          style={{ top: popupPosition.y, left: popupPosition.x }}
+        >
+          <button onClick={() => handlePopupAction('insertBefore')}>Insert Before</button>
+          <button onClick={() => handlePopupAction('insertAfter')}>Insert After</button>
+          <button onClick={() => handlePopupAction('adopt')}>Adopt</button>
+        </div>
+      )}
+    </div>
+  )
 }

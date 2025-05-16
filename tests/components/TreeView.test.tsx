@@ -229,4 +229,46 @@ describe('TreeView Component', () => {
 
     expect(getAllByText('Duplicate')).toHaveLength(4);
   });
+
+  it('highlights the dragged node and the hover node', () => {
+    const { getByText } = render(
+      <TreeView
+        node={mockTree}
+        onSelect={mockOnSelect}
+        onUpdate={mockOnUpdate}
+        onMoveNode={mockOnMoveNode}
+      />
+    );
+
+    const object1 = getByText('Object 1');
+    const data11 = getByText('Data 1-1');
+
+    fireEvent.dragStart(object1);
+    expect(object1).toHaveClass('bg-yellow-200');
+
+    fireEvent.dragOver(data11);
+    expect(data11).toHaveClass('bg-yellow-200');
+  });
+
+  it('displays popup with action buttons during drag & drop', () => {
+    const { getByText, getByRole } = render(
+      <TreeView
+        node={mockTree}
+        onSelect={mockOnSelect}
+        onUpdate={mockOnUpdate}
+        onMoveNode={mockOnMoveNode}
+      />
+    );
+
+    const object1 = getByText('Object 1');
+    const data11 = getByText('Data 1-1');
+
+    fireEvent.dragStart(object1);
+    fireEvent.dragOver(data11);
+    fireEvent.drop(data11);
+
+    expect(getByRole('button', { name: 'Insert Before' })).toBeInTheDocument();
+    expect(getByRole('button', { name: 'Insert After' })).toBeInTheDocument();
+    expect(getByRole('button', { name: 'Adopt' })).toBeInTheDocument();
+  });
 });
