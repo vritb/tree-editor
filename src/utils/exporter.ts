@@ -5,12 +5,17 @@ export function treeToJson(node: TreeNode): any {
     case 'root':
     case 'object':
       return node.children.reduce(
-        (acc, c) => ({ ...acc, [c.name ?? '']: treeToJson(c) }),
+        (acc, c) => {
+          if (c.name === '') {
+            throw new Error('Node name cannot be an empty string');
+          }
+          return { ...acc, [c.name ?? '']: treeToJson(c) };
+        },
         {}
-      )
+      );
     case 'list':
-      return node.children.map(treeToJson)
+      return node.children.map(treeToJson);
     case 'data':
-      return node.value
+      return node.value;
   }
 }
