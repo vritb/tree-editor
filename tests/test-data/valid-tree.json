@@ -1,0 +1,19 @@
+{
+  "id": "1",
+  "type": "root",
+  "children": [
+    {
+      "id": "2",
+      "type": "object",
+      "name": "child1",
+      "children": [
+        {
+          "id": "3",
+          "type": "data",
+          "name": "grandchild1",
+          "value": "value1"
+        }
+      ]
+    }
+  ]
+}

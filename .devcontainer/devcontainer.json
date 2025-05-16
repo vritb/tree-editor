@@ -3,7 +3,7 @@
     {
       "label": "test",
       "type": "shell",
-      "command": "echo \"No test script defined in package.json\""
+      "command": "npm run test"
     },
     {
       "label": "build",
