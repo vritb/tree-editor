@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { DataNode, TreeNode } from '../types/nodes'
-import DraggableTreeNode from './DraggableTreeNode';
 
 interface Props {
   node: TreeNode
   selected?: string
   onSelect: (n: TreeNode) => void
   onUpdate: (n: TreeNode) => void
-  onMoveNode: (draggedNode: TreeNode, targetNode: TreeNode) => void;
   highlightedNode?: string | null;
 }
 
@@ -16,7 +14,6 @@ export default function TreeView({
   selected,
   onSelect,
   onUpdate,
-  onMoveNode,
   highlightedNode,
 }: Props) {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
@@ -40,13 +37,7 @@ export default function TreeView({
     }
 
     return (
-      <DraggableTreeNode
-        key={n.id}
-        node={n}
-        onMoveNode={onMoveNode}
-        onSelect={onSelect}
-        selected={selected}
-      >
+      <div key={n.id}>
         <div style={{ paddingLeft: depth * 16 }}>
           <div
             className={`cursor-pointer p-1 rounded ${
@@ -81,7 +72,7 @@ export default function TreeView({
           </div>
           {hasChildren && !isCollapsed && n.children.map((c) => renderNode(c, depth + 1))}
         </div>
-      </DraggableTreeNode>
+      </div>
     )
   }
 

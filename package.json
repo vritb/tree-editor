@@ -14,8 +14,6 @@
   "dependencies": {
     "@vitejs/plugin-react": "4.4.1",
     "react": "^18.3.0",
-    "react-dnd": "^16.0.1",
-    "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "^18.3.0",
     "react-use": "^17.6.0"
   },
