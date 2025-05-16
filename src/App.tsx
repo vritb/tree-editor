@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useCallback } from 'react';
 import { useAsync } from 'react-use'; 
 import { TreeNode, RootNode } from './types/nodes'
 import { parseJsonToTree } from './utils/parser'
@@ -124,17 +124,16 @@ export default function App() {
     setPopupTargetNode(null);
   };
 
-  const addToHistory = debounce((newTree: RootNode) => {
-    const timestamp = new Date().toISOString();
+  const addToHistory = useCallback(debounce((newTree: RootNode) => {
     setHistory((prevHistory) => {
-      const updatedHistory = [...prevHistory, { ...newTree, timestamp }];
+      const updatedHistory = [...prevHistory, newTree];
       if (updatedHistory.length > undoRedoDepthLimit) {
         updatedHistory.shift();
       }
       return updatedHistory;
     });
     setRedoStack([]);
-  }, 300);
+  }, 300), [undoRedoDepthLimit]);
 
   const handleUndo = () => {
     setHistory((prevHistory) => {
