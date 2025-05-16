@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { useAsync } from 'react-use'; 
 import { TreeNode, RootNode } from './types/nodes'
 import { parseJsonToTree } from './utils/parser'
@@ -28,6 +28,7 @@ export default function App() {
   const [undoRedoDepthLimit, setUndoRedoDepthLimit] = useState<number>(getUndoRedoDepthLimit());
   const [showPopup, setShowPopup] = useState<boolean>(false);
   const [popupTargetNode, setPopupTargetNode] = useState<TreeNode | null>(null);
+  const [highlightedNode, setHighlightedNode] = useState<string | null>(null);
 
   const handleUpdateNode = (updated: TreeNode) => {
     // replace the node in tree
@@ -142,6 +143,7 @@ export default function App() {
       const lastState = newHistory.pop()!;
       setRedoStack((prevRedoStack) => [tree, ...prevRedoStack]);
       setTree(lastState);
+      setHighlightedNode(lastState.id);
       toast.info('Undo action performed');
       return newHistory;
     });
@@ -154,10 +156,27 @@ export default function App() {
       const nextState = newRedoStack.shift()!;
       setHistory((prevHistory) => [...prevHistory, tree]);
       setTree(nextState);
+      setHighlightedNode(nextState.id);
       toast.info('Redo action performed');
       return newRedoStack;
     });
   };
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.key === 'z') {
+        handleUndo();
+      } else if (event.ctrlKey && event.key === 'y') {
+        handleRedo();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleUndo, handleRedo]);
 
   const stats = calculateStats(tree)
 
@@ -195,6 +214,7 @@ export default function App() {
             onSelect={(n) => setSelected(n)}
             onUpdate={handleUpdateNode}
             onMoveNode={handleMoveNode}
+            highlightedNode={highlightedNode}
           />
         </div>
         <div className="w-1/3 p-2 overflow-auto">
