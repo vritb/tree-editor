@@ -2,6 +2,10 @@ import { v4 as uuid } from 'uuid'
 import { RootNode, TreeNode } from '../types/nodes'
 
 export function parseJsonToTree(input: any): RootNode {
+  if (typeof input !== 'object' || input === null) {
+    throw new Error('Input is not a valid JSON object');
+  }
+
   const build = (value: any, name?: string): TreeNode => {
     if (Array.isArray(value)) {
       return {

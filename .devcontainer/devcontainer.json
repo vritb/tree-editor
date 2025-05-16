@@ -1,7 +1,19 @@
 {
-  "tasks": {
-    "test": "echo \"No test script defined in package.json\"",
-    "build": "npm install && npm run build",
-    "launch": "npm install && npm run dev"
-  }
+  "tasks": [
+    {
+      "label": "test",
+      "type": "shell",
+      "command": "echo \"No test script defined in package.json\""
+    },
+    {
+      "label": "build",
+      "type": "shell",
+      "command": "npm install && npm run build"
+    },
+    {
+      "label": "launch",
+      "type": "shell",
+      "command": "npm install && npm run dev"
+    }
+  ]
 }

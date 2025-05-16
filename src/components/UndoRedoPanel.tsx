@@ -14,8 +14,8 @@ const UndoRedoPanel: React.FC<UndoRedoPanelProps> = ({ history, redoStack }) => 
         <h3 className="font-medium">Undo Stack</h3>
         <ul className="list-disc pl-4">
           {history.map((state, index) => (
-            <li key={index} title={`Timestamp: ${state.timestamp}`}>
-              {state.name || '(root)'} - {state.timestamp}
+            <li key={index}>
+              {state.name || '(root)'}
             </li>
           ))}
         </ul>
@@ -24,8 +24,8 @@ const UndoRedoPanel: React.FC<UndoRedoPanelProps> = ({ history, redoStack }) => 
         <h3 className="font-medium">Redo Stack</h3>
         <ul className="list-disc pl-4">
           {redoStack.map((state, index) => (
-            <li key={index} title={`Timestamp: ${state.timestamp}`}>
-              {state.name || '(root)'} - {state.timestamp}
+            <li key={index}>
+              {state.name || '(root)'}
             </li>
           ))}
         </ul>
