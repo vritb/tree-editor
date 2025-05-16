@@ -23,6 +23,8 @@ export default function App() {
   const [history, setHistory] = useState<RootNode[]>([]);
   const [redoStack, setRedoStack] = useState<RootNode[]>([]);
   const [undoRedoDepthLimit, setUndoRedoDepthLimit] = useState<number>(getUndoRedoDepthLimit());
+  const [highlightedNode, setHighlightedNode] = useState<string | null>(null);
+  const [popupVisible, setPopupVisible] = useState(false);
 
   const handleUpdateNode = (updated: TreeNode) => {
     // replace the node in tree
@@ -129,6 +131,14 @@ export default function App() {
     };
   }, [handleUndo, handleRedo]);
 
+  const handleMoveNode = (draggedNode: TreeNode, targetNode: TreeNode, action: string) => {
+    // Implement the logic to move the node based on the action
+    // For example, you can update the tree state and add to history
+    // This is a placeholder implementation
+    console.log(`Move ${draggedNode.name} to ${targetNode.name} with action ${action}`);
+    addToHistory(tree);
+  };
+
   const stats = calculateStats(tree)
 
   return (
@@ -163,6 +173,8 @@ export default function App() {
           selected={selected?.id}
           onSelect={(n) => setSelected(n)}
           onUpdate={handleUpdateNode}
+          highlightedNode={highlightedNode}
+          onMoveNode={handleMoveNode}
         />
       </div>
       <div className="w-1/3 p-2 overflow-auto">
