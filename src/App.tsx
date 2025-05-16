@@ -14,6 +14,9 @@ import SettingsPanel from './components/SettingsPanel';
 import { getUndoRedoDepthLimit } from './config/te-config';
 import UndoRedoPanel from './components/UndoRedoPanel';
 import Popup from './components/Popup';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { debounce } from 'lodash';
 
 const initial: RootNode = parseJsonToTree({})
 
@@ -121,16 +124,17 @@ export default function App() {
     setPopupTargetNode(null);
   };
 
-  const addToHistory = (newTree: RootNode) => {
+  const addToHistory = debounce((newTree: RootNode) => {
+    const timestamp = new Date().toISOString();
     setHistory((prevHistory) => {
-      const updatedHistory = [...prevHistory, newTree];
+      const updatedHistory = [...prevHistory, { ...newTree, timestamp }];
       if (updatedHistory.length > undoRedoDepthLimit) {
         updatedHistory.shift();
       }
       return updatedHistory;
     });
     setRedoStack([]);
-  };
+  }, 300);
 
   const handleUndo = () => {
     setHistory((prevHistory) => {
@@ -139,6 +143,7 @@ export default function App() {
       const lastState = newHistory.pop()!;
       setRedoStack((prevRedoStack) => [tree, ...prevRedoStack]);
       setTree(lastState);
+      toast.info('Undo action performed');
       return newHistory;
     });
   };
@@ -150,6 +155,7 @@ export default function App() {
       const nextState = newRedoStack.shift()!;
       setHistory((prevHistory) => [...prevHistory, tree]);
       setTree(nextState);
+      toast.info('Redo action performed');
       return newRedoStack;
     });
   };

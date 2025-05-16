@@ -16,7 +16,6 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     const newLimit = parseInt(e.target.value, 10);
     setDepthLimit(newLimit);
     setUndoRedoDepthLimit(newLimit);
-    setUndoRedoDepthLimit(newLimit);
   };
 
   return (
