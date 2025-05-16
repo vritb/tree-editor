@@ -8,12 +8,9 @@ import NodeEditor from './components/NodeEditor'
 import StatsPanel from './components/StatsPanel'
 import { calculateStats } from './utils/stats'
 import { validateJson } from './utils/validate'
-import { DndProvider } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
 import SettingsPanel from './components/SettingsPanel';
 import { getUndoRedoDepthLimit } from './config/te-config';
 import UndoRedoPanel from './components/UndoRedoPanel';
-import Popup from './components/Popup';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { debounce } from 'lodash';
@@ -26,9 +23,6 @@ export default function App() {
   const [history, setHistory] = useState<RootNode[]>([]);
   const [redoStack, setRedoStack] = useState<RootNode[]>([]);
   const [undoRedoDepthLimit, setUndoRedoDepthLimit] = useState<number>(getUndoRedoDepthLimit());
-  const [showPopup, setShowPopup] = useState<boolean>(false);
-  const [popupTargetNode, setPopupTargetNode] = useState<TreeNode | null>(null);
-  const [highlightedNode, setHighlightedNode] = useState<string | null>(null);
 
   const handleUpdateNode = (updated: TreeNode) => {
     // replace the node in tree
@@ -86,45 +80,6 @@ export default function App() {
     a.click()
   }
 
-  const handleMoveNode = (draggedNode: TreeNode, targetNode: TreeNode) => {
-    setShowPopup(true);
-    setPopupTargetNode(targetNode);
-  };
-
-  const handlePopupChoice = (choice: 'child' | 'sibling') => {
-    if (!popupTargetNode) return;
-
-    const moveNode = (node: TreeNode): TreeNode | null => {
-      if (node.id === popupTargetNode.id) return null;
-      if ('children' in node) {
-        const newChildren = node.children
-          .map(moveNode)
-          .filter((n): n is TreeNode => n !== null);
-        return { ...node, children: newChildren };
-      }
-      return node;
-    };
-
-    const addNode = (node: TreeNode, targetId: string): TreeNode => {
-      if (node.id === targetId && 'children' in node) {
-        return { ...node, children: [...node.children, popupTargetNode] };
-      }
-      if ('children' in node) {
-        return { ...node, children: node.children.map((c) => addNode(c, targetId)) };
-      }
-      return node;
-    };
-
-    setTree((t) => {
-      const newTree = addNode(moveNode(t) as RootNode, popupTargetNode.id) as RootNode;
-      addToHistory(newTree);
-      return newTree;
-    });
-
-    setShowPopup(false);
-    setPopupTargetNode(null);
-  };
-
   const addToHistory = useCallback(debounce((newTree: RootNode) => {
     setHistory((prevHistory) => {
       const updatedHistory = [...prevHistory, newTree];
@@ -143,8 +98,6 @@ export default function App() {
       const lastState = newHistory.pop()!;
       setRedoStack((prevRedoStack) => [tree, ...prevRedoStack]);
       setTree(lastState);
-      setHighlightedNode(lastState.id);
-      toast.info('Undo action performed');
       return newHistory;
     });
   };
@@ -156,8 +109,6 @@ export default function App() {
       const nextState = newRedoStack.shift()!;
       setHistory((prevHistory) => [...prevHistory, tree]);
       setTree(nextState);
-      setHighlightedNode(nextState.id);
-      toast.info('Redo action performed');
       return newRedoStack;
     });
   };
@@ -181,65 +132,54 @@ export default function App() {
   const stats = calculateStats(tree)
 
   return (
-    <DndProvider backend={HTML5Backend}>
-      <div className="flex h-full">
-        <div className="w-1/3 overflow-auto border-r">
-          <div className="flex justify-between items-center p-2">
-            <h1 className="font-bold">Tree</h1>
-            <div className="space-x-2">
-              <button className="btn btn-sm" onClick={handleImportClick}>
-                Import JSON
-              </button>
-              <button className="btn btn-sm" onClick={handleExport}>
-                Export JSON
-              </button>
-              <button className="btn btn-sm" onClick={handleUndo} disabled={history.length === 0}>
-                Undo
-              </button>
-              <button className="btn btn-sm" onClick={handleRedo} disabled={redoStack.length === 0}>
-                Redo
-              </button>
-            </div>
-            <input
-              type="file"
-              accept=".json,application/json"
-              ref={hiddenFileInput}
-              onChange={handleImport}
-              className="hidden"
-            />
+    <div className="flex h-full">
+      <div className="w-1/3 overflow-auto border-r">
+        <div className="flex justify-between items-center p-2">
+          <h1 className="font-bold">Tree</h1>
+          <div className="space-x-2">
+            <button className="btn btn-sm" onClick={handleImportClick}>
+              Import JSON
+            </button>
+            <button className="btn btn-sm" onClick={handleExport}>
+              Export JSON
+            </button>
+            <button className="btn btn-sm" onClick={handleUndo} disabled={history.length === 0}>
+              Undo
+            </button>
+            <button className="btn btn-sm" onClick={handleRedo} disabled={redoStack.length === 0}>
+              Redo
+            </button>
           </div>
-          <TreeView
-            node={tree}
-            selected={selected?.id}
-            onSelect={(n) => setSelected(n)}
-            onUpdate={handleUpdateNode}
-            onMoveNode={handleMoveNode}
-            highlightedNode={highlightedNode}
+          <input
+            type="file"
+            accept=".json,application/json"
+            ref={hiddenFileInput}
+            onChange={handleImport}
+            className="hidden"
           />
         </div>
-        <div className="w-1/3 p-2 overflow-auto">
-          {selected ? (
-            <NodeEditor node={selected} onUpdate={handleUpdateNode} />
-          ) : (
-            <p className="text-gray-500">Select a node to edit</p>
-          )}
-        </div>
-        <div className="w-1/3 p-2 overflow-auto border-l">
-          <StatsPanel stats={stats} />
-          <SettingsPanel
-            undoRedoDepthLimit={undoRedoDepthLimit}
-            setUndoRedoDepthLimit={setUndoRedoDepthLimit}
-          />
-          <UndoRedoPanel history={history} redoStack={redoStack} />
-        </div>
-      </div>
-      {showPopup && (
-        <Popup
-          message="Do you want to accept as child or sibling?"
-          onAcceptChild={() => handlePopupChoice('child')}
-          onAcceptSibling={() => handlePopupChoice('sibling')}
+        <TreeView
+          node={tree}
+          selected={selected?.id}
+          onSelect={(n) => setSelected(n)}
+          onUpdate={handleUpdateNode}
         />
-      )}
-    </DndProvider>
+      </div>
+      <div className="w-1/3 p-2 overflow-auto">
+        {selected ? (
+          <NodeEditor node={selected} onUpdate={handleUpdateNode} />
+        ) : (
+          <p className="text-gray-500">Select a node to edit</p>
+        )}
+      </div>
+      <div className="w-1/3 p-2 overflow-auto border-l">
+        <StatsPanel stats={stats} />
+        <SettingsPanel
+          undoRedoDepthLimit={undoRedoDepthLimit}
+          setUndoRedoDepthLimit={setUndoRedoDepthLimit}
+        />
+        <UndoRedoPanel history={history} redoStack={redoStack} />
+      </div>
+    </div>
   )
 }
