@@ -1,0 +1,33 @@
+{
+  "id": "1",
+  "type": "root",
+  "children": [
+    {
+      "id": "2",
+      "type": "object",
+      "name": "child1",
+      "children": [
+        {
+          "id": "3",
+          "type": "object",
+          "name": "grandchild1",
+          "children": [
+            {
+              "id": "4",
+              "type": "object",
+              "name": "greatGrandchild1",
+              "children": [
+                {
+                  "id": "5",
+                  "type": "data",
+                  "name": "greatGreatGrandchild1",
+                  "value": "value1"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
